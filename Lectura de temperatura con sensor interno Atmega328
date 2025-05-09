@@ -1,0 +1,37 @@
+void setup() {
+  Serial.begin(9600);
+
+  // Configurar el ADC:
+  // - Referencia interna de 1.1V (REFS1 y REFS0)
+  // - Canal de sensor de temperatura interno (MUX3)
+  ADMUX = (1 << REFS1) | (1 << REFS0) | (1 << MUX3);
+
+  // Habilitar el ADC
+  ADCSRA |= (1 << ADEN);
+
+  delay(100);  // Espera para estabilizar
+}
+
+void loop() {
+  // Iniciar conversión
+  ADCSRA |= (1 << ADSC);
+
+  // Esperar a que finalice
+  while (ADCSRA & (1 << ADSC))
+    ;
+
+  // Leer valor ADC (ajustado a la derecha)
+  int adcValue = ADC;
+
+  // Fórmula calibrada
+  float tempC = ((ADC * 782) / 1000);
+
+  // ---------- Mostrar resultado ----------
+  Serial.print("Lectura ADC: ");
+  Serial.print(adcValue);
+  Serial.print(" | Temperatura estimada: ");
+  Serial.print(tempC);
+  Serial.println(" °C");
+
+  delay(1000);  // Esperar 1 segundo
+}
