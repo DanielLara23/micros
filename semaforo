@@ -1,0 +1,42 @@
+// Pines para los LEDs
+const int ledRojo = 25;
+const int ledAmarillo = 33;
+const int ledVerde = 32;
+
+void setup() {
+  // Configurar los pines como salidas
+  pinMode(ledRojo, OUTPUT);
+  pinMode(ledAmarillo, OUTPUT);
+  pinMode(ledVerde, OUTPUT);
+}
+
+void loop() {
+  // Estado: Verde
+  encenderSemaforo(HIGH, LOW, LOW);
+  delay(4000); // 4 segundos en verde
+
+  // Estado: Verdo intermitente (3 veces)
+  for (int i = 0; i < 3; i++) {
+    encenderSemaforo(HIGH, LOW, LOW);
+    delay(1000); // Verde encendido 1s
+    encenderSemaforo(LOW, LOW, LOW);
+    delay(1000); // Verde apagado 1s
+  }
+
+  // Estado: Amarillo
+  encenderSemaforo(LOW, HIGH, LOW);
+  delay(5000); // 5 segundos en amarillo
+
+  
+
+  // Estado: rojo
+  encenderSemaforo(LOW, LOW, HIGH);
+  delay(7000); // 7 segundos en rojo
+}
+
+// Función para encender LEDs según parámetros
+void encenderSemaforo(int verde, int amarillo, int rojo) {
+  digitalWrite(ledVerde, verde);
+  digitalWrite(ledAmarillo, amarillo);
+  digitalWrite(ledRojo, rojo);
+}
