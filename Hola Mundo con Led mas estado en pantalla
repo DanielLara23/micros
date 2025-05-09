@@ -1,0 +1,17 @@
+from machine import Pin
+from time import sleep
+
+# Configuración del pin
+led = Pin(32, Pin.OUT)  # Usa GPIO32
+
+print("Hola MicroPython")  # Mensaje de inicio
+
+# Bucle de parpadeo
+while True:
+    led.value(1)
+    print("LED ON")
+    sleep(1)
+    
+    led.value(0)
+    print("LED OFF")
+    sleep(1)
