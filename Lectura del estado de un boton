@@ -1,0 +1,18 @@
+from machine import Pin
+import time
+
+led = Pin(33, Pin.OUT)   # LED verde en GPIO 33
+boton = Pin(32, Pin.IN, Pin.PULL_UP)  # Botón (dip switch) en GPIO 32
+
+while True:
+    estado = boton.value()  # 0 es boton no presionado, 1 boton presionado
+    
+    print("Estado del botón:", boton.value())
+    if estado == 1:
+        led.value(1)        # Encender LED
+        print("Botón presionado → LED ENCENDIDO")
+    else:
+        led.value(0)        # Apagar LED
+        print("Botón no presionado → LED APAGADO")
+
+    time.sleep(0.5)
