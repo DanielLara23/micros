@@ -1,0 +1,11 @@
+from machine import Pin      # Importamos la librería para controlar pines
+import time                  # Importamos la librería para funciones de tiempo
+
+led = Pin(25, Pin.OUT)        # LED conectado al GPIO 25
+
+while True:
+    led.value(1)             # Encender LED
+    time.sleep(0.1)          # Esperar 100 ms
+
+    led.value(0)             # Apagar LED
+    time.sleep(0.1)          # Esperar otros 100 ms
