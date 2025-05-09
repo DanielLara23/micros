@@ -1,5 +1,5 @@
-from machine import Pin      # Importamos la librería para controlar pines
-import time                  # Importamos la librería para funciones de tiempo
+from machine import Pin 
+import time 
 
 led = Pin(25, Pin.OUT)        # LED conectado al GPIO 25
 
