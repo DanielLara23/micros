@@ -2,16 +2,18 @@
 
 // Frecuencia del reloj de 16MHz para Arduino Nano
 #define F_CPU 16000000UL
+
 // Velocidad de comunicación en bauds
-#define BAUDRATE 9600
+#define BAUD_RATE 9600
+
 // UBRRn = (f_OSC / (16 * BAUD)) - 1  (para modo asíncrono normal), sin embargo, para evitar el desbordamiento de entero se usa el 16UL
-#define BAUD_PRESCALER (((F_CPU / (BAUDRATE * 16UL))) - 1)
+#define UBRR_VALUE ((F_CPU / (16UL * BAUD_RATE)) - 1)
 
 void USART_Init(void)
 {
     // Se carga el valor calculado en los dos registros de 8 bits UBRR0H y UBRR0L.
-    UBRR0H = (unsigned char)(BAUD_PRESCALER >> 8);
-    UBRR0L = (unsigned char)BAUD_PRESCALER;
+    UBRR0H = (unsigned char)(UBRR_VALUE >> 8);
+    UBRR0L = (unsigned char)UBRR_VALUE;
 
     // Habilitar el receptor Y el transmisor (bits RXEN0 y TXEN0 en UCSR0B)
     UCSR0B = (1 << RXEN0) | (1 << TXEN0);
