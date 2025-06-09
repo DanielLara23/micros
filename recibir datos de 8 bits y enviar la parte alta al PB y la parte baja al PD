@@ -1,0 +1,67 @@
+#include <avr/io.h>
+
+// Frecuencia del reloj de 16MHz para Arduino Nano
+#define F_CPU 16000000UL
+// Velocidad de comunicación en bauds
+#define BAUDRATE 9600
+// UBRRn = (f_OSC / (16 * BAUD)) - 1  (para modo asíncrono normal), sin embargo, para evitar el desbordamiento de entero se usa el 16UL
+#define BAUD_PRESCALER (((F_CPU / (BAUDRATE * 16UL))) - 1)
+
+void USART_Init(void)
+{
+    // Se carga el valor calculado en los dos registros de 8 bits UBRR0H y UBRR0L.
+    UBRR0H = (unsigned char)(BAUD_PRESCALER >> 8);
+    UBRR0L = (unsigned char)BAUD_PRESCALER;
+
+    // Habilitar el receptor Y el transmisor (bits RXEN0 y TXEN0 en UCSR0B)
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+
+    // En el registro UCSR0C, se activan los bits UCSZ01 y UCSZ00 para 8 bits de datos.
+    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+}
+
+unsigned char USART_Receive(void)
+{
+    // Espera a que se complete la recepción de un dato
+    while (!(UCSR0A & (1 << RXC0)));
+    
+    // Retorna el dato recibido del registro búfer UDR0
+    return UDR0;
+}
+
+void Ports_Init(void)
+{
+    // Configura todos los pines del Puerto B como salida
+    DDRB = 0xFF; 
+    
+    // Configura todos los pines del Puerto D como salida
+    DDRD = 0xFF;
+}
+
+int main(void)
+{
+    unsigned char received_data;
+    unsigned char high_nibble;
+    unsigned char low_nibble;
+
+    USART_Init();
+    Ports_Init();
+
+    while (1)
+    {
+        // Esperar y recibir un byte desde el puerto serial
+        received_data = USART_Receive();
+        
+        // Aislar la parte alta (4 bits más significativos)
+        high_nibble = received_data & 0xF0;
+
+        // Aislar la parte baja (4 bits menos significativos(
+        low_nibble = received_data & 0x0F;
+
+        // Enviar la parte alta al Puerto B y la parte baja al Puerto D
+        PORTB = high_nibble;
+        PORTD = low_nibble;
+    }
+    
+    return 0;
+}
