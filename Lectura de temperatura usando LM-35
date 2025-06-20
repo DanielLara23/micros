@@ -1,0 +1,63 @@
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <SPI.h>
+
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW 
+#define MAX_DEVICES 4
+#define CLK_PIN   18
+#define DATA_PIN  23
+#define CS_PIN    15
+#define LM35_PIN 34
+
+MD_Parola myDisplay = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+
+char message[10] = "---"; 
+
+// Lectura de temperatura
+float readStableTemperature() {
+  const int numeroDeMuestras = 500;
+    int sumaDeLecturas = 0;
+    for (int i = 0; i < numeroDeMuestras; i++) {
+        sumaDeLecturas += analogRead(LM35_PIN);
+        delay(2);
+    }
+
+    float lecturaPromedio = (float)sumaDeLecturas / numeroDeMuestras;
+
+    float temperaturaCalculada = (lecturaPromedio * 3.3 * 100.0) / 4096.0;
+
+    float factorDeAjuste = 1.9; 
+    float temperaturaFinal = temperaturaCalculada * factorDeAjuste;
+
+    temperaturaFinal = temperaturaFinal - 1.0;
+
+    if (temperaturaFinal < 2.0) {
+        return 0.0;
+  }
+
+  return temperaturaFinal;  
+}
+
+void setup() {
+  Serial.begin(115200);
+  analogSetPinAttenuation(LM35_PIN, ADC_0db);
+  myDisplay.begin();
+  myDisplay.setIntensity(2);
+  myDisplay.displayClear();
+  myDisplay.displayText(message, PA_CENTER, 30, 500, PA_SCROLL_LEFT);
+}
+
+void loop() {
+  if (myDisplay.displayAnimate()) {
+    float temperaturaC = readStableTemperature();
+    Serial.print("Temperatura: ");
+    Serial.print(temperaturaC, 1);
+    Serial.println(" C");
+    if (temperaturaC == 0.0) {
+      sprintf(message, "Error");
+    } else {
+      sprintf(message, "%.1f", temperaturaC);
+    }
+    myDisplay.displayReset();
+  }
+}
