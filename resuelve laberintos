@@ -1,0 +1,107 @@
+const int NUM_SENSORS = 8;
+const int SENSOR_PINS[NUM_SENSORS] = {39, 36, 34, 35, 32, 33, 25, 26};
+const int ENA_PIN_L = 5; const int IN1_PIN_L = 17; const int IN2_PIN_L = 16;
+const int ENB_PIN_R = 4; const int IN3_PIN_R = 22; const int IN4_PIN_R = 21;
+
+// PARÁMETROS DE AJUSTE DE VELOCIDAD Y DE GIRO
+int VELOCIDAD_BASE = 40;
+float FA = 0.7;
+int VELOCIDAD_GIRO = 50;
+int TIEMPO_VUELTA_180 = 40;
+int TIEMPO_GIRO_90 = 40; 
+
+int pesos[] = {-35, -25, 5, 0, 0, 5, 25, 35};
+const int UMBRAL_NEGRO = 4090;
+
+// FUNCIONES DE MOVIMIENTO
+void mover(int vel_izq, int vel_der) {
+  bool adelante_izq = vel_izq >= 0;
+  bool adelante_der = vel_der >= 0;
+
+  int potencia_izq = constrain(abs(vel_izq), 0, 255);
+  int potencia_der = constrain(abs(vel_der), 0, 255);
+
+  digitalWrite(IN1_PIN_L, adelante_izq ? HIGH : LOW);
+  digitalWrite(IN2_PIN_L, adelante_izq ? LOW : HIGH);
+  analogWrite(ENA_PIN_L, potencia_izq);
+
+  digitalWrite(IN3_PIN_R, adelante_der ? HIGH : LOW);
+  digitalWrite(IN4_PIN_R, adelante_der ? LOW : HIGH);
+  analogWrite(ENB_PIN_R, potencia_der);
+}
+
+void parar() { mover(0, 0); }
+void dar_vuelta() { mover(VELOCIDAD_GIRO, -VELOCIDAD_GIRO); delay(TIEMPO_VUELTA_180); }
+
+void girar_derecha_90() { mover(VELOCIDAD_GIRO, -VELOCIDAD_GIRO); delay(TIEMPO_GIRO_90); }
+void girar_izquierda_90() { mover(-VELOCIDAD_GIRO, VELOCIDAD_GIRO); delay(TIEMPO_GIRO_90); }
+
+
+
+void leer_sensores_digital(bool* lecturas) {
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    lecturas[i] = analogRead(SENSOR_PINS[i]) >= UMBRAL_NEGRO;
+  }
+}
+
+// LÓGICA PRINCIPAL 
+void setup() {
+  Serial.begin(115200);
+  pinMode(ENA_PIN_L, OUTPUT); pinMode(IN1_PIN_L, OUTPUT); pinMode(IN2_PIN_L, OUTPUT);
+  pinMode(ENB_PIN_R, OUTPUT); pinMode(IN3_PIN_R, OUTPUT); pinMode(IN4_PIN_R, OUTPUT);
+  
+  Serial.println("Robot con Algoritmo de Decision. Empezando en 3s...");
+  delay(3000);
+}
+
+void loop() {
+  bool s[NUM_SENSORS];
+  leer_sensores_digital(s);
+  
+  int sensores_activos = 0;
+  for(int i=0; i<NUM_SENSORS; i++) {
+    if(s[i]) {
+      sensores_activos++;
+    }
+  }
+
+  // INICIO DE LA NUEVA LÓGICA DE DECISIÓN 
+
+  // CASO 1: INTERSECCIÓN 
+  if (sensores_activos >= 5) {
+    mover(VELOCIDAD_BASE, VELOCIDAD_BASE);
+    delay(150); 
+    leer_sensores_digital(s);
+
+    // Aplicar Regla de la Mano Derecha
+    // Prioridad #1: ¿Hay camino a la derecha? (sensores 6 o 7 ven la línea)
+    if (s[6] || s[7]) {
+      girar_derecha_90();
+    }
+    // Prioridad #2: Si no, seguir adelante
+    else {
+      // No hay giro a la derecha, por lo que la regla dice seguir adelante.
+    }
+  }
+  // CASO 2: CALLEJÓN SIN SALIDA (Da vielta de 180 grados)
+  else if (sensores_activos == 0) {
+    dar_vuelta();
+  }
+  // CASO 3: SEGUIR LÍNEA NORMAL
+  else {
+    float suma_ponderada = 0;
+    for(int i=0; i<NUM_SENSORS; i++) {
+      if(s[i]) {
+        suma_ponderada += pesos[i];
+      }
+    }
+    
+    float posicion = suma_ponderada / sensores_activos;
+    int ajuste = FA * posicion;
+    
+    int vel_motor_izq = VELOCIDAD_BASE - ajuste; 
+    int vel_motor_der = VELOCIDAD_BASE + ajuste;
+    
+    mover(vel_motor_izq, vel_motor_der);
+  }
+}
