@@ -1,0 +1,17 @@
+
+int contador = 0;
+
+void setup() {
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  String mensaje = String("#") + String(contador) + " HOLA MUNDO";  
+  
+  Serial.println(mensaje);
+  
+  contador += 1;
+  
+  delay(1000);
+}
