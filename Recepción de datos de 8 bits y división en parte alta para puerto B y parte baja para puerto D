@@ -1,0 +1,44 @@
+void setup() {
+  Serial.begin(9600);
+  
+  DDRD = DDRD | B00111100;
+  DDRB = DDRB | B00001111;
+
+}
+
+void loop() { 
+  if (Serial.available() > 0) {
+    byte datoRecibido = Serial.read();
+    
+    byte parteBaja = datoRecibido & B00001111;
+    byte parteAlta = (datoRecibido >> 4) & B00001111;
+
+    byte valorParaPortD = parteBaja << 2;
+    PORTD = (PORTD & B11000011) | valorParaPortD;
+    PORTB = (PORTB & B11110000) | parteAlta;
+    
+    Serial.print(">> Letra: '");
+    Serial.print((char)datoRecibido);
+    Serial.print("'  ASCII: ");
+    Serial.print(datoRecibido);
+    Serial.print("  Binario: ");
+    printByte(datoRecibido);
+    Serial.print("  Parte Alta (PORTB): ");
+    printNibble(parteAlta);
+    Serial.print("  Parte Baja (PORTD): ");
+    printNibble(parteBaja);
+    Serial.println();
+  }
+}
+
+void printByte(byte b) {
+  for (int i = 7; i >= 0; i--) {
+    Serial.print(bitRead(b, i));
+  }
+}
+
+void printNibble(byte b) {
+  for (int i = 3; i >= 0; i--) {
+    Serial.print(bitRead(b, i));
+  }
+}
